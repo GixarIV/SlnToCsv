@@ -102,12 +102,16 @@ namespace SlnToCsv
             var dir = Path.GetDirectoryName(file);
             var filesInDir = Directory.GetFiles(dir);
 
-            var csproj = filesInDir.Single(x => x.EndsWith(".csproj"));
-            var assemblyPattern = @"<AssemblyName>(.*)<\/AssemblyName>";
-            var csprojFile = File.ReadAllText(csproj);
+            var csproj = filesInDir.FirstOrDefault(x => x.EndsWith(".csproj"));
+            string assemblyName = string.Empty;
+            if (csproj != null)
+            {
+                var assemblyPattern = @"<AssemblyName>(.*)<\/AssemblyName>";
 
-            var assemblyName = Regex.Match(csprojFile, assemblyPattern).Groups[1].Value;
+                var csprojFile = File.ReadAllText(csproj);
 
+                assemblyName = Regex.Match(csprojFile, assemblyPattern).Groups[1].Value;
+            }
             var packageXml = new XmlDocument();
             packageXml.Load(file);
 
@@ -117,7 +121,7 @@ namespace SlnToCsv
             {
                 var packageId = package.Attributes["id"].Value;
                 var packageVersion = package.Attributes["version"].Value;
-                var targetFramework = package.Attributes["targetFramework"].Value;
+                var targetFramework = package.Attributes["targetFramework"]?.Value;
                 
                 packages.TryGetValue(packageId, out var addedPackage);
 
